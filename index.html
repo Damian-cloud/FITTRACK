@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="FitTrack"/>
@@ -19,7 +19,10 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
   --green:#34d399;--yellow:#fbbf24;--red:#f87171;--orange:#fb923c;
   --border:#2e2e2e;--radius:14px;--radius-sm:10px;
   --safe-top:env(safe-area-inset-top,0px);
-  --safe-bottom:env(safe-area-inset-bottom,0px)
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --nav-float:12px;
+  --nav-bottom:calc(var(--safe-bottom) + var(--nav-float));
+  --nav-height:64px
 }
 .app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
 .header{padding:calc(var(--safe-top) + 14px) 16px 12px;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;background:var(--bg0);z-index:10}
@@ -30,7 +33,7 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 .date-pill{background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.2s;user-select:none}
 .date-pill:active{background:var(--bg3)}
 .date-pill.past{border-color:var(--accent);color:var(--accent)}
-.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px calc(80px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px calc(var(--nav-height) + var(--nav-bottom) + 12px);-webkit-overflow-scrolling:touch}
 
 /* Ring */
 .macro-ring-card{background:var(--bg1);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
@@ -99,13 +102,13 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 .pb-item-val{font-size:19px;font-weight:600;color:var(--text1)}
 
 /* Nav */
-.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:rgba(15,15,15,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:0.5px solid var(--border);display:flex;justify-content:space-around;padding:10px 0 calc(var(--safe-bottom) + 8px)}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:0.4;transition:opacity 0.2s;padding:4px 16px;background:none;border:none}
-.nav-item.active{opacity:1}
-.nav-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nav-item.active svg{stroke:var(--accent)}
-.nav-item span{font-size:10px;color:var(--text2)}
-.nav-item.active span{color:var(--accent)}
+.bottom-nav{position:absolute;bottom:var(--nav-bottom);left:20px;right:20px;z-index:20;display:flex;justify-content:space-around;align-items:center;padding:10px 8px;border-radius:24px;background:rgba(38,38,40,0.58);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border:0.5px solid rgba(255,255,255,0.14);box-shadow:0 8px 32px rgba(0,0,0,0.42),inset 0 1px 0 rgba(255,255,255,0.1);transition:background 0.35s ease,box-shadow 0.35s ease,transform 0.35s ease}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;opacity:0.42;padding:6px 18px;background:none;border:none;color:var(--text2);transition:opacity 0.3s cubic-bezier(0.4,0,0.2,1),transform 0.2s cubic-bezier(0.4,0,0.2,1),color 0.3s ease}
+.nav-item:active{transform:scale(0.9);opacity:0.65}
+.nav-item.active{opacity:1;color:var(--accent)}
+.nav-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke 0.3s ease,transform 0.3s cubic-bezier(0.4,0,0.2,1)}
+.nav-item.active svg{stroke:var(--accent);transform:scale(1.06)}
+.nav-item span{font-size:10px;font-weight:500;letter-spacing:0.01em;color:inherit;transition:color 0.3s ease}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:flex-end;justify-content:center}
@@ -159,7 +162,7 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
 /* Toast */
-.toast{position:fixed;bottom:calc(90px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:9px 18px;font-size:13px;color:var(--text1);z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:calc(var(--nav-height) + var(--nav-bottom) + 16px);left:50%;transform:translateX(-50%);background:rgba(38,38,40,0.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border:0.5px solid rgba(255,255,255,0.12);border-radius:20px;padding:9px 18px;font-size:13px;color:var(--text1);z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 </style>
 </head>
