@@ -25,9 +25,8 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 .header{padding:calc(var(--safe-top) + 14px) 16px 12px;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;background:var(--bg0);z-index:10}
 .header-left{display:flex;flex-direction:column;gap:8px;min-width:0}
 .header h1{font-size:22px;font-weight:600;color:var(--text1);letter-spacing:-0.5px}
-.day-type-toggle{display:flex;background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:3px;gap:2px}
-.day-type-btn{flex:1;padding:5px 12px;border:none;border-radius:16px;font-size:12px;font-weight:500;color:var(--text2);background:transparent;cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.day-type-btn.active{background:var(--accent2);color:#fff}
+.day-type-select{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:6px 28px 6px 10px;font-size:12px;font-weight:500;color:var(--text1);cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23606060' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.day-type-select:focus{border-color:var(--accent)}
 .date-pill{background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.2s;user-select:none}
 .date-pill:active{background:var(--bg3)}
 .date-pill.past{border-color:var(--accent);color:var(--accent)}
@@ -53,10 +52,16 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 .day-banner button{background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer}
 
 /* Meals */
-.meal-section{margin-bottom:14px}
-.meal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:0 2px}
+.meal-section{margin-bottom:10px;background:var(--bg1);border:0.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.meal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;cursor:pointer;user-select:none;transition:background 0.15s}
+.meal-header:active{background:var(--bg2)}
+.meal-header-left{display:flex;align-items:center;gap:8px;min-width:0}
+.meal-chevron{font-size:10px;color:var(--text3);transition:transform 0.2s;flex-shrink:0}
+.meal-section.collapsed .meal-chevron{transform:rotate(-90deg)}
 .meal-title{font-size:14px;font-weight:500;color:var(--text1)}
-.meal-kcal{font-size:12px;color:var(--text3)}
+.meal-kcal{font-size:12px;color:var(--text3);flex-shrink:0}
+.meal-body{padding:0 13px 12px}
+.meal-section.collapsed .meal-body{display:none}
 .food-item{background:var(--bg1);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.15s}
 .food-item:active{background:var(--bg2)}
 .food-name{font-size:13px;color:var(--text1);font-weight:500}
@@ -163,10 +168,10 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
   <div class="header">
     <div class="header-left">
       <h1 id="view-title">Nutrition</h1>
-      <div class="day-type-toggle" id="day-type-toggle" style="display:none">
-        <button class="day-type-btn active" id="btn-training" onclick="setDayType('training')">Training Day</button>
-        <button class="day-type-btn" id="btn-rest" onclick="setDayType('rest')">Rest Day</button>
-      </div>
+      <select class="day-type-select" id="day-type-select" style="display:none" onchange="setDayType(this.value)">
+        <option value="training">Training Day</option>
+        <option value="rest">Rest Day</option>
+      </select>
     </div>
     <div class="date-pill" id="date-pill" onclick="openCalendar()"></div>
   </div>
@@ -203,19 +208,22 @@ const DAY_TARGETS={
   rest:{kcal:1400,protein:140,carbs:80,fat:45}
 };
 let dayType=DB.get('dayType')||'training';
+let mealCollapsed=DB.get('mealCollapsed')||{};
 function getTargets(){return DAY_TARGETS[dayType]||DAY_TARGETS.training}
 function setDayType(t){
   dayType=t;DB.set('dayType',t);
-  document.getElementById('btn-training').classList.toggle('active',t==='training');
-  document.getElementById('btn-rest').classList.toggle('active',t==='rest');
+  const sel=document.getElementById('day-type-select');if(sel)sel.value=t;
   if(VIEW==='nutrition')renderNutrition();
   else if(VIEW==='progress')renderProgress();
 }
 function updateDayTypeToggle(){
-  const el=document.getElementById('day-type-toggle');
-  if(el)el.style.display=VIEW==='nutrition'?'flex':'none';
-  document.getElementById('btn-training').classList.toggle('active',dayType==='training');
-  document.getElementById('btn-rest').classList.toggle('active',dayType==='rest');
+  const el=document.getElementById('day-type-select');
+  if(el){el.style.display=VIEW==='nutrition'?'block':'none';el.value=dayType;}
+}
+function toggleMeal(meal){
+  mealCollapsed[meal]=!mealCollapsed[meal];
+  DB.set('mealCollapsed',mealCollapsed);
+  renderNutrition();
 }
 let VIEW='nutrition';
 let CAL_MONTH={y:new Date().getFullYear(),m:new Date().getMonth()};
@@ -327,9 +335,13 @@ function renderNutrition(){
   </div>`;
 
   MEALS.forEach(meal=>{
-    const items=data[meal]||[],mt=mealTotal(items);
-    html+=`<div class="meal-section">
-      <div class="meal-header"><span class="meal-title">${meal}</span><span class="meal-kcal">${Math.round(mt.kcal)} kcal</span></div>
+    const items=data[meal]||[],mt=mealTotal(items),collapsed=!!mealCollapsed[meal];
+    html+=`<div class="meal-section${collapsed?' collapsed':''}">
+      <div class="meal-header" onclick="toggleMeal('${meal}')">
+        <div class="meal-header-left"><span class="meal-chevron">▼</span><span class="meal-title">${meal}</span></div>
+        <span class="meal-kcal">${Math.round(mt.kcal)} kcal${items.length?` · ${items.length} item${items.length===1?'':'s'}`:''}</span>
+      </div>
+      <div class="meal-body">
       ${items.map((item,i)=>`
       <div class="food-item" onclick="${ro?'':'openEditFood(\''+k+'\',\''+meal+'\','+i+')'}">
         <div style="flex:1;min-width:0">
@@ -343,6 +355,7 @@ function renderNutrition(){
         </div>
       </div>`).join('')}
       ${!ro?`<button class="add-food-btn" onclick="openAddFood('${meal}')">+ Add food</button>`:''}
+      </div>
     </div>`;
   });
   document.getElementById('main-content').innerHTML=html;
