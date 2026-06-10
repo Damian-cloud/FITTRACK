@@ -20,7 +20,7 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f;padding-bottom:0}
   --border:#2e2e2e;--radius:14px;--radius-sm:10px;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
-  --nav-height:calc(62px + env(safe-area-inset-bottom, 20px) + 12px)
+  --nav-height:calc(62px + env(safe-area-inset-bottom,34px) + 16px)
 }
 .app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
 .header{padding:calc(var(--safe-top) + 14px) 16px 12px;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;background:var(--bg0);z-index:10}
@@ -131,11 +131,10 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f;padding-bottom:0}
 .sort-pill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);background:var(--bg2);color:var(--text2);transition:all 0.2s}
 .sort-pill.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
 
-/* Nav — rounded pill just above home indicator */
+/* Nav — rounded pill, native iOS positioning */
 .bottom-nav{
   position:fixed;
-  bottom:0;
-  margin-bottom:env(safe-area-inset-bottom,34px);
+  bottom:calc(env(safe-area-inset-bottom,34px) + 6px);
   left:50%;
   transform:translateX(-50%);
   width:88%;
@@ -150,7 +149,7 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f;padding-bottom:0}
   background:rgba(28,28,30,0.92);
   backdrop-filter:blur(20px) saturate(180%);
   -webkit-backdrop-filter:blur(20px) saturate(180%);
-  box-shadow:0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow:0 4px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
   border:0.5px solid rgba(255,255,255,0.12);
   isolation:isolate}
 .bottom-nav::before{
