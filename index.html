@@ -134,7 +134,8 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f;padding-bottom:0}
 /* Nav — rounded pill just above home indicator */
 .bottom-nav{
   position:fixed;
-  bottom:8px;
+  bottom:0;
+  margin-bottom:env(safe-area-inset-bottom,34px);
   left:50%;
   transform:translateX(-50%);
   width:88%;
