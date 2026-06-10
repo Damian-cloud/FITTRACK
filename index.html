@@ -132,15 +132,13 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 .sort-pill.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
 
 /* Nav — flush bottom like WhatsApp */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:auto;border-radius:0;z-index:100;display:flex;justify-content:space-evenly;align-items:flex-start;padding:10px 6px 0;
-  padding-bottom:max(env(safe-area-inset-bottom), 16px);
-  background:rgba(22,22,24,0.98);
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:auto;border-radius:0;z-index:100;display:flex;justify-content:space-evenly;align-items:center;padding:10px 6px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(22,22,24,0.96);
   backdrop-filter:blur(24px) saturate(200%);
   -webkit-backdrop-filter:blur(24px) saturate(200%);
-  border-top:0.5px solid rgba(255,255,255,0.08);
+  box-shadow:0 -0.5px 0 rgba(255,255,255,0.1);
+  border:none;border-top:0.5px solid rgba(255,255,255,0.08);
   isolation:isolate}
-/* pseudo fills any remaining gap below the bar to the screen edge */
-.bottom-nav::after{content:'';position:fixed;bottom:0;left:0;right:0;height:env(safe-area-inset-bottom,0px);background:rgba(22,22,24,0.98);z-index:99}
 .bottom-nav::before{display:none}
 /* sliding pill indicator */
 .nav-indicator{position:absolute;top:8px;height:46px;border-radius:23px;background:rgba(255,255,255,0.13);box-shadow:inset 0 1px 1px rgba(255,255,255,0.15);transition:left 0.38s cubic-bezier(0.34,1.56,0.64,1),width 0.38s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;z-index:1}
@@ -267,9 +265,16 @@ const DEFAULT_TARGETS={
   training:{kcal:1600,protein:150,carbs:120,fat:50},
   rest:{kcal:1400,protein:140,carbs:80,fat:45}
 };
-const COFFEE_SIZES={Small:{ml:250,factor:250/350},Medium:{ml:350,factor:1},Large:{ml:450,factor:450/350}};
-const MILK_OPTIONS={'Full cream':{kcal:19,p:1,c:1.4,f:1.1},'Low fat':{kcal:12,p:1,c:1.5,f:0.3},'Oat milk':{kcal:18,p:0.4,c:3,f:0.5},'Almond milk':{kcal:6,p:0.2,c:0.5,f:0.4}};
-const COFFEE_BASE_PER_350={kcal:120,p:6,c:10,f:5};
+// Coffee sizes — milk volume (ml) is total cup size minus ~60ml espresso
+const COFFEE_SIZES={Small:{ml:250,milkMl:120},Medium:{ml:350,milkMl:180},Large:{ml:450,milkMl:250}};
+// Milk macros per 30ml serving
+const MILK_OPTIONS={'Full cream':{kcal:18,p:1.0,c:1.4,f:1.0},'Low fat':{kcal:13,p:1.0,c:1.4,f:0.3},'Almond Breeze':{kcal:5,p:0.1,c:0.5,f:0.3},'Almond Butta':{kcal:9,p:0.3,c:0.6,f:0.7}};
+// Espresso base (2 shots) — same regardless of cup size
+const COFFEE_BASE={kcal:3,p:0.4,c:0,f:0};
+// Black coffee drinks — no milk
+const BLACK_COFFEES=/^(black coffee|americano|espresso)/i;
+// Milk-based drinks — show size + milk selectors
+const MILK_COFFEES=/cappuccino|latte|flat white|cortado/i;
 
 let dayType=DB.get('dayType')||'training';
 let mealCollapsed=DB.get('mealCollapsed')||{};
@@ -617,8 +622,10 @@ function calSelect(y,m,d){
   if(VIEW==='nutrition')renderNutrition();else if(VIEW==='gym')renderGym();else renderProgress();
 }
 
-// ── COFFEE helper ─────────────────────────────────────────────────────────────
-function isCoffee(name){return /coffee|cappuccino|latte|cortado|flat white/i.test(name)}
+// ── COFFEE helpers ────────────────────────────────────────────────────────────
+function isBlackCoffee(name){return BLACK_COFFEES.test(name)}
+function isMilkCoffee(name){return MILK_COFFEES.test(name)}
+function isCoffee(name){return isBlackCoffee(name)||isMilkCoffee(name)}
 
 // ── ADD FOOD MODAL ────────────────────────────────────────────────────────────
 function openAddFood(meal){
@@ -644,9 +651,11 @@ function openAddFood(meal){
         <div class="size-btn" id="sz-Medium" onclick="selectSize('Medium')">Medium<br><span style="font-size:10px;opacity:0.7">350ml</span></div>
         <div class="size-btn" id="sz-Large" onclick="selectSize('Large')">Large<br><span style="font-size:10px;opacity:0.7">450ml</span></div>
       </div>
-      <div class="form-label">Milk</div>
-      <div class="milk-selector">
-        ${Object.keys(MILK_OPTIONS).map(k=>`<div class="milk-btn${k==='Almond milk'?' active':''}" id="mk-${k.replace(/ /g,'-')}" onclick="selectMilk('${k}')">${k}</div>`).join('')}
+      <div id="coffee-milk-wrap">
+        <div class="form-label">Milk</div>
+        <div class="milk-selector">
+          ${Object.keys(MILK_OPTIONS).map(k=>`<div class="milk-btn${k==='Almond Breeze'?' active':''}" id="mk-${k.replace(/ /g,'-')}" onclick="selectMilk('${k}')">${k}</div>`).join('')}
+        </div>
       </div>
     </div>
     <div id="qty-wrap">
@@ -680,7 +689,7 @@ function openAddFood(meal){
     </div>
   </div></div>`;
   showModal(html);
-  window._qty=1;window._measureType='qty';window._coffeeSize='Small';window._coffeeMilk='Almond milk';
+  window._qty=1;window._measureType='qty';window._coffeeSize='Small';window._coffeeMilk='Almond Breeze';
   setTimeout(()=>document.getElementById('fn')&&document.getElementById('fn').focus(),100);
 }
 
@@ -718,21 +727,54 @@ function updateGramsPreview(){
 
 function checkCoffeeFields(){
   const name=document.getElementById('fn')?.value||'';
-  const wrap=document.getElementById('coffee-size-wrap');if(!wrap)return;
-  if(isCoffee(name)){wrap.style.display='block';applyCoffeeDefaults();}
-  else wrap.style.display='none';
+  const wrap=document.getElementById('coffee-size-wrap');
+  const milkWrap=document.getElementById('coffee-milk-wrap');
+  if(!wrap)return;
+  if(isBlackCoffee(name)){
+    // show size only, hide milk
+    wrap.style.display='block';
+    if(milkWrap)milkWrap.style.display='none';
+    applyBlackCoffeeDefaults();
+  } else if(isMilkCoffee(name)){
+    // show size + milk
+    wrap.style.display='block';
+    if(milkWrap)milkWrap.style.display='';
+    applyCoffeeDefaults();
+  } else {
+    wrap.style.display='none';
+  }
 }
-function applyCoffeeDefaults(){
-  const sz=COFFEE_SIZES[window._coffeeSize||'Small'];const milk=MILK_OPTIONS[window._coffeeMilk||'Almond milk'];const f=sz.factor;
-  const kcal=Math.round(COFFEE_BASE_PER_350.kcal*f+milk.kcal*f);
-  const fk=document.getElementById('fk');if(fk)fk.value=kcal;
-  const fp=document.getElementById('fp');if(fp)fp.value=+(COFFEE_BASE_PER_350.p*f+milk.p*f).toFixed(1);
-  const fc=document.getElementById('fc');if(fc)fc.value=+(COFFEE_BASE_PER_350.c*f+milk.c*f).toFixed(1);
-  const ff=document.getElementById('ff');if(ff)ff.value=+(COFFEE_BASE_PER_350.f*f+milk.f*f).toFixed(1);
+function applyBlackCoffeeDefaults(){
+  // Black coffee: just espresso base, size only affects volume label not calories
+  const fk=document.getElementById('fk');if(fk)fk.value=COFFEE_BASE.kcal;
+  const fp=document.getElementById('fp');if(fp)fp.value=COFFEE_BASE.p;
+  const fc=document.getElementById('fc');if(fc)fc.value=COFFEE_BASE.c;
+  const ff=document.getElementById('ff');if(ff)ff.value=COFFEE_BASE.f;
   updateQtyPreview();
 }
-function selectSize(sz){window._coffeeSize=sz;Object.keys(COFFEE_SIZES).forEach(k=>{const el=document.getElementById('sz-'+k);if(el)el.classList.toggle('active',k===sz);});applyCoffeeDefaults();}
-function selectMilk(mk){window._coffeeMilk=mk;Object.keys(MILK_OPTIONS).forEach(k=>{const el=document.getElementById('mk-'+k.replace(/ /g,'-'));if(el)el.classList.toggle('active',k===mk);});applyCoffeeDefaults();}
+function applyCoffeeDefaults(){
+  const sz=COFFEE_SIZES[window._coffeeSize||'Small'];
+  const milk=MILK_OPTIONS[window._coffeeMilk||'Almond Breeze'];
+  // servings of milk = milkMl / 30ml per serving
+  const milkServings=sz.milkMl/30;
+  const kcal=Math.round(COFFEE_BASE.kcal+milk.kcal*milkServings);
+  const fk=document.getElementById('fk');if(fk)fk.value=kcal;
+  const fp=document.getElementById('fp');if(fp)fp.value=+(COFFEE_BASE.p+milk.p*milkServings).toFixed(1);
+  const fc=document.getElementById('fc');if(fc)fc.value=+(COFFEE_BASE.c+milk.c*milkServings).toFixed(1);
+  const ff=document.getElementById('ff');if(ff)ff.value=+(COFFEE_BASE.f+milk.f*milkServings).toFixed(1);
+  updateQtyPreview();
+}
+function selectSize(sz){
+  window._coffeeSize=sz;
+  Object.keys(COFFEE_SIZES).forEach(k=>{const el=document.getElementById('sz-'+k);if(el)el.classList.toggle('active',k===sz);});
+  const name=document.getElementById('fn')?.value||'';
+  if(isBlackCoffee(name))applyBlackCoffeeDefaults();else applyCoffeeDefaults();
+}
+function selectMilk(mk){
+  window._coffeeMilk=mk;
+  Object.keys(MILK_OPTIONS).forEach(k=>{const el=document.getElementById('mk-'+k.replace(/ /g,'-'));if(el)el.classList.toggle('active',k===mk);});
+  applyCoffeeDefaults();
+}
 
 function adjQty(d){
   window._qty=Math.max(0.5,(window._qty||1)+d);
