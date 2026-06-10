@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:#0f0f0f}
+html,body{height:100%;overflow:hidden;background:#0f0f0f;padding-bottom:0}
 :root{
   --bg0:#0f0f0f;--bg1:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
   --text1:#f0f0f0;--text2:#b0b0b0;--text3:#606060;
@@ -134,7 +134,7 @@ html,body{height:100%;overflow:hidden;background:#0f0f0f}
 /* Nav — rounded pill just above home indicator */
 .bottom-nav{
   position:fixed;
-  bottom:calc(env(safe-area-inset-bottom, 20px) + 6px);
+  bottom:8px;
   left:50%;
   transform:translateX(-50%);
   width:88%;
